@@ -1,0 +1,164 @@
+version: '3.8'
+
+# Docker Compose configuration for Funbank testing environment
+# Provides isolated testing infrastructure with dedicated test databases
+
+services:
+  # MySQL Test Database - Isolated instance for integration tests
+  # Uses different port and separate data volume to avoid conflicts
+  mysql-test:
+    image: mysql:8.0
+    container_name: funbank-mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: funbank_test_root_2024
+      MYSQL_DATABASE: funbank_test
+      MYSQL_USER: funbank_test_user
+      MYSQL_PASSWORD: funbank_test_pass_2024
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"  # Different port to avoid conflicts with dev database
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+      - ./docker/mysql/conf:/etc/mysql/conf.d
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone='+00:00'
+      --innodb-buffer-pool-size=128M
+      --max-connections=100
+    networks:
+      - funbank-test-network
+    restart: "no"  # Don't restart automatically in test environment
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+
+  # MongoDB Test Database - Event store for testing event sourcing
+  # Configured with test-specific settings and separate data volume
+  mongodb-test:
+    image: mongo:6.0
+    container_name: funbank-mongodb-test
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: funbank_mongo_test_admin
+      MONGO_INITDB_ROOT_PASSWORD: funbank_mongo_test_2024
+      MONGO_INITDB_DATABASE: funbank_events_test
+    ports:
+      - "27018:27017"  # Different port for test instance
+    volumes:
+      - mongodb_test_data:/data/db
+      - ./docker/mongodb/init:/docker-entrypoint-initdb.d
+    networks:
+      - funbank-test-network
+    restart: "no"
+    command: mongod --auth --bind_ip_all
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      timeout: 5s
+      retries: 5
+      interval: 30s
+
+  # Redis Test Instance - Caching and session storage for tests
+  # Separate instance prevents test data pollution in dev environment
+  redis-test:
+    image: redis:7.0-alpine
+    container_name: funbank-redis-test
+    ports:
+      - "6380:6379"  # Different port for test instance
+    volumes:
+      - redis_test_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - funbank-test-network
+    restart: "no"
+    # Use different password for test instance
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass funbank_redis_test_2024
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "funbank_redis_test_2024", "ping"]
+      timeout: 3s
+      retries: 5
+      interval: 10s
+
+  # WireMock Server - Mock external services for integration testing
+  # Provides HTTP service mocking capabilities as required by Suncorp
+  wiremock:
+    image: wiremock/wiremock:3.0.1
+    container_name: funbank-wiremock
+    ports:
+      - "8089:8080"  # WireMock admin and mock service port
+    volumes:
+      - ./testing/wiremock/mappings:/home/wiremock/mappings
+      - ./testing/wiremock/__files:/home/wiremock/__files
+    networks:
+      - funbank-test-network
+    restart: "no"
+    command: ["--global-response-templating", "--verbose"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/__admin/health"]
+      timeout: 5s
+      retries: 3
+      interval: 10s
+
+  # Stubby4j Server - HTTP service stubbing for testing as per Suncorp requirements
+  # Provides additional stubbing capabilities for complex test scenarios
+  stubby4j:
+    image: azagniotov/stubby4j:7.6.0
+    container_name: funbank-stubby4j
+    ports:
+      - "8882:8882"  # Stubby4j stub server port
+      - "8889:8889"  # Stubby4j admin port
+    volumes:
+      - ./testing/stubby4j:/home/stubby4j/conf
+    networks:
+      - funbank-test-network
+    restart: "no"
+    command: ["--data", "/home/stubby4j/conf/stubs.yaml", "--admin", "8889", "--stubs", "8882"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8889/status"]
+      timeout: 5s
+      retries: 3
+      interval: 10s
+
+  # Jaeger for distributed tracing in test environment
+  # Enables tracing verification in integration tests
+  jaeger-test:
+    image: jaegertracing/all-in-one:1.50
+    container_name: funbank-jaeger-test
+    ports:
+      - "16687:16686"  # Jaeger UI (different port for tests)
+      - "14269:14268"  # Jaeger HTTP collector
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    networks:
+      - funbank-test-network
+    restart: "no"
+
+  # Mailhog for email testing in integration tests
+  # Captures emails sent during test execution for verification
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: funbank-mailhog
+    ports:
+      - "1026:1025"  # SMTP server port for tests
+      - "8026:8025"  # Web UI for email inspection
+    networks:
+      - funbank-test-network
+    restart: "no"
+
+# Separate test data volumes to avoid conflicts with development data
+volumes:
+  mysql_test_data:
+    driver: local
+  mongodb_test_data:
+    driver: local
+  redis_test_data:
+    driver: local
+
+# Isolated test network
+networks:
+  funbank-test-network:
+    driver: bridge
+    name: funbank-test-network
