@@ -125,10 +125,12 @@
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-api</artifactId>
+            <version>${opentelemetry.version}</version>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-instrumentation-annotations</artifactId>
+            <version>${opentelemetry.version}</version>
         </dependency>
         
         <!-- Apache Commons for Utilities -->
