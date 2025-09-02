@@ -33,17 +33,35 @@
         <!-- Banking industry-standard dependencies -->
         <spring-cloud.version>2022.0.4</spring-cloud.version>
         <jwt.version>0.11.5</jwt.version>
-        <jackson.version>2.15.3</jackson.version>
-        <mongodb.version>4.10.2</mongodb.version>
+        <opentelemetry.version>1.32.0</opentelemetry.version>
         
         <!-- Testing dependencies aligned with Suncorp requirements -->
-        <junit.version>5.10.0</junit.version>
-        <mockito.version>5.6.0</mockito.version>
-        <assertj.version>3.24.2</assertj.version>
         <testcontainers.version>1.19.1</testcontainers.version>
         <wiremock.version>3.2.0</wiremock.version>
         <pact.version>4.6.2</pact.version>
     </properties>
+    
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Cloud BOM for version management -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+            <!-- OpenTelemetry BOM for version management -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     
     <dependencies>
         <!-- Spring Boot Core Dependencies -->
@@ -101,24 +119,7 @@
             <scope>runtime</scope>
         </dependency>
         
-        <!-- JSON Processing for Event Sourcing -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        
-        <!-- MongoDB Driver for Event Store -->
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-            <version>${mongodb.version}</version>
-        </dependency>
+        <!-- JSON Processing is provided by Spring Boot starter-web and starter-data-mongodb -->
         
         <!-- OpenTelemetry for Observability -->
         <dependency>
@@ -144,40 +145,10 @@
         </dependency>
         
         <!-- Testing Dependencies (Suncorp Requirements) -->
-        <!-- Unit Testing with JUnit 5 -->
+        <!-- Spring Boot Test Starter includes JUnit 5, Mockito, AssertJ, TestContainers support -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- JUnit 5 -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- Mockito for Mocking -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-        
-        <!-- AssertJ for Fluent Assertions -->
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
         
@@ -204,7 +175,7 @@
         <!-- WireMock for External Service Mocking (Suncorp Requirement) -->
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
+            <artifactId>wiremock-standalone</artifactId>
             <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
@@ -220,23 +191,11 @@
     
     <build>
         <plugins>
-            <!-- Maven Compiler Plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin>
-            
             <!-- Unit Tests - Surefire Plugin -->
+            <!-- Spring Boot parent manages plugin version -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.1</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>
@@ -245,17 +204,16 @@
                         <exclude>**/*IntegrationTest.java</exclude>
                         <exclude>**/*E2ETest.java</exclude>
                     </excludes>
-                    <!-- Banking security: Prevent test methods from being called in parallel -->
-                    <parallel>methods</parallel>
-                    <threadCount>4</threadCount>
+                    <!-- Banking security: Sequential execution for transactional test integrity -->
+                    <parallel>none</parallel>
                 </configuration>
             </plugin>
             
             <!-- Integration Tests - Failsafe Plugin -->
+            <!-- Spring Boot parent manages plugin version -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.2.1</version>
                 <configuration>
                     <includes>
                         <include>**/*IntegrationTest.java</include>
@@ -324,10 +282,10 @@
             </plugin>
             
             <!-- Source and Javadoc Generation -->
+            <!-- Spring Boot parent manages plugin versions -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -341,7 +299,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
