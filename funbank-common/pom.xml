@@ -33,7 +33,8 @@
         <!-- Banking industry-standard dependencies -->
         <spring-cloud.version>2022.0.4</spring-cloud.version>
         <jwt.version>0.11.5</jwt.version>
-        <opentelemetry.version>1.32.0</opentelemetry.version>
+        <opentelemetry.version>1.53.0</opentelemetry.version>
+        <opentelemetry-instrumentation.version>2.19.0</opentelemetry-instrumentation.version>
         
         <!-- Testing dependencies aligned with Suncorp requirements -->
         <testcontainers.version>1.19.1</testcontainers.version>
@@ -52,7 +53,16 @@
                 <scope>import</scope>
             </dependency>
             
-            <!-- OpenTelemetry BOM for version management -->
+            <!-- OpenTelemetry Instrumentation BOM for annotations and instrumentations -->
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom</artifactId>
+                <version>${opentelemetry-instrumentation.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+            <!-- OpenTelemetry Core BOM for SDK and API -->
             <dependency>
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-bom</artifactId>
@@ -122,15 +132,14 @@
         <!-- JSON Processing is provided by Spring Boot starter-web and starter-data-mongodb -->
         
         <!-- OpenTelemetry for Observability -->
+        <!-- Versions managed by respective BOMs -->
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-api</artifactId>
-            <version>${opentelemetry.version}</version>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-instrumentation-annotations</artifactId>
-            <version>${opentelemetry.version}</version>
         </dependency>
         
         <!-- Apache Commons for Utilities -->
