@@ -1,5 +1,7 @@
 package com.funbank.common.cqrs;
 
+import com.funbank.common.exceptions.CommandValidationException;
+
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
@@ -7,11 +9,11 @@ import java.util.UUID;
 
 /**
  * Base class for CQRS Commands in banking system
- * 
+ *
  * Commands represent business intentions to modify system state in banking operations.
  * They encapsulate user requests like "transfer money", "create account", or "update profile".
  * Commands are processed by Command Handlers and may generate Domain Events.
- * 
+ *
  * Key Banking Characteristics:
  * - Immutable command data for audit trails
  * - User context for security and compliance
@@ -29,10 +31,10 @@ public abstract class Command {
 
     /**
      * Creates a new command with user context and metadata
-     * 
+     *
      * Business Rule: All banking commands must be traceable to a specific user
      * for audit compliance and security. Commands are immutable once created.
-     * 
+     *
      * @param userId ID of the user issuing this command (required for banking security)
      * @param correlationId ID linking related operations across services
      * @param metadata Additional context (IP address, device info, etc.)
@@ -48,10 +50,10 @@ public abstract class Command {
 
     /**
      * Creates a command with minimal context (system-generated operations)
-     * 
+     *
      * Used for internal system operations that don't originate from user actions,
      * such as automated processes, scheduled tasks, or system maintenance.
-     * 
+     *
      * @param userId ID of the user or system account
      */
     protected Command(String userId) {
@@ -108,7 +110,7 @@ public abstract class Command {
 
     /**
      * Gets metadata value by key with type casting
-     * 
+     *
      * @param key Metadata key
      * @param type Expected type of the value
      * @return Metadata value cast to specified type, or null if not found
@@ -145,23 +147,23 @@ public abstract class Command {
 
     /**
      * Validates command data before processing
-     * 
+     *
      * Abstract method implemented by concrete command classes to validate
      * their specific business rules and data constraints.
-     * 
+     *
      * Banking Rule: All commands must be validated before processing to
      * prevent invalid operations and maintain data integrity.
-     * 
+     *
      * @throws CommandValidationException if command data is invalid
      */
     public abstract void validate();
 
     /**
      * Returns a description of this command for audit logs
-     * 
+     *
      * Should provide meaningful business context without exposing
      * sensitive information like account numbers or amounts.
-     * 
+     *
      * @return Human-readable command description for audit purposes
      */
     public abstract String getAuditDescription();

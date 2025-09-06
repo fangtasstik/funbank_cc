@@ -1,5 +1,7 @@
 package com.funbank.common.cqrs;
 
+import com.funbank.common.exceptions.QueryValidationException;
+
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
@@ -7,11 +9,11 @@ import java.util.UUID;
 
 /**
  * Base class for CQRS Queries in banking system
- * 
+ *
  * Queries represent requests to read data from the banking system without
  * modifying state. They are processed by Query Handlers and return data
  * from optimized read models or projections.
- * 
+ *
  * Key Banking Characteristics:
  * - Immutable query parameters for audit trails
  * - User context for security and access control
@@ -29,11 +31,11 @@ public abstract class Query {
 
     /**
      * Creates a new query with user context and metadata
-     * 
+     *
      * Business Rule: All banking queries must include user context for
      * access control and audit compliance. Users should only access
      * data they are authorized to view.
-     * 
+     *
      * @param userId ID of the user requesting data (required for banking security)
      * @param correlationId ID linking related operations across services
      * @param metadata Additional context (pagination, filtering, etc.)
@@ -49,10 +51,10 @@ public abstract class Query {
 
     /**
      * Creates a query with minimal context
-     * 
+     *
      * Used for internal system queries or automated processes that
      * don't originate from direct user requests.
-     * 
+     *
      * @param userId ID of the user or system account
      */
     protected Query(String userId) {
@@ -109,7 +111,7 @@ public abstract class Query {
 
     /**
      * Gets metadata value by key with type casting
-     * 
+     *
      * @param key Metadata key
      * @param type Expected type of the value
      * @return Metadata value cast to specified type, or null if not found
@@ -153,7 +155,7 @@ public abstract class Query {
 
     /**
      * Indicates whether results can be cached
-     * 
+     *
      * Banking data has varying caching requirements based on sensitivity
      * and freshness requirements. Account balances need fresh data,
      * while reference data can be cached longer.
@@ -173,7 +175,7 @@ public abstract class Query {
 
     /**
      * Indicates whether stale cached data is acceptable
-     * 
+     *
      * Some banking queries can tolerate slightly stale data for
      * better performance, while others need real-time accuracy.
      */
@@ -184,23 +186,23 @@ public abstract class Query {
 
     /**
      * Validates query parameters before processing
-     * 
+     *
      * Abstract method implemented by concrete query classes to validate
      * their specific parameters and business constraints.
-     * 
+     *
      * Banking Rule: All queries must validate parameters to prevent
      * unauthorized access and ensure data integrity.
-     * 
+     *
      * @throws QueryValidationException if query parameters are invalid
      */
     public abstract void validate();
 
     /**
      * Returns a description of this query for audit logs
-     * 
+     *
      * Should provide meaningful context for compliance reporting
      * without exposing sensitive data in logs.
-     * 
+     *
      * @return Human-readable query description for audit purposes
      */
     public abstract String getAuditDescription();

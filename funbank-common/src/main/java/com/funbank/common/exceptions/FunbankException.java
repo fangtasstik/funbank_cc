@@ -1,15 +1,17 @@
 package com.funbank.common.exceptions;
 
+import com.funbank.common.utils.AuditContext;
+
 import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
  * Base exception class for Funbank banking system
- * 
+ *
  * Provides standardized error handling across all microservices with
  * banking-specific error context, audit information, and compliance features.
  * All exceptions in the banking system should extend this base class.
- * 
+ *
  * Key Banking Features:
  * - Error codes for systematic error classification
  * - User-friendly messages that don't expose sensitive information
@@ -28,11 +30,11 @@ public abstract class FunbankException extends RuntimeException {
 
     /**
      * Creates a new Funbank exception with complete error context
-     * 
+     *
      * Business Rule: All banking system errors must provide comprehensive
      * context for troubleshooting while protecting sensitive information
      * from exposure in user-facing messages.
-     * 
+     *
      * @param errorCode Unique error code for systematic classification
      * @param message Technical error message for developers/logs
      * @param userMessage User-friendly error message (no sensitive data)
@@ -55,7 +57,7 @@ public abstract class FunbankException extends RuntimeException {
 
     /**
      * Creates a Funbank exception with basic error information
-     * 
+     *
      * @param errorCode Unique error code
      * @param message Technical error message
      * @param userMessage User-friendly error message
@@ -66,7 +68,7 @@ public abstract class FunbankException extends RuntimeException {
 
     /**
      * Creates a Funbank exception with cause
-     * 
+     *
      * @param errorCode Unique error code
      * @param message Technical error message
      * @param userMessage User-friendly error message
@@ -126,7 +128,7 @@ public abstract class FunbankException extends RuntimeException {
 
     /**
      * Gets error context value by key with type casting
-     * 
+     *
      * @param key Context key
      * @param type Expected type of the value
      * @return Context value cast to specified type, or null if not found
@@ -163,7 +165,7 @@ public abstract class FunbankException extends RuntimeException {
 
     /**
      * Creates audit context for error logging
-     * 
+     *
      * Banking Rule: All errors must be auditable for compliance
      * and troubleshooting purposes.
      */
@@ -183,7 +185,7 @@ public abstract class FunbankException extends RuntimeException {
     public String toString() {
         return String.format("%s{errorCode='%s', message='%s', userMessage='%s', " +
                            "severity=%s, correlationId='%s', timestamp=%s}",
-                           getClass().getSimpleName(), errorCode, getMessage(), 
+                           getClass().getSimpleName(), errorCode, getMessage(),
                            userMessage, severity, correlationId, timestamp);
     }
 

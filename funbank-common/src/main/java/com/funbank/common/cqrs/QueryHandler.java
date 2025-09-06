@@ -1,19 +1,25 @@
 package com.funbank.common.cqrs;
 
+import com.funbank.common.exceptions.QueryProcessingException;
+import com.funbank.common.exceptions.QueryValidationException;
+import com.funbank.common.exceptions.UnauthorizedAccessException;
+import com.funbank.common.security.UserPermissions;
+import com.funbank.common.utils.AuditContext;
+
 /**
  * Interface for CQRS Query Handlers in banking system
- * 
+ *
  * Query handlers retrieve data from read models, databases, or other
  * data sources to satisfy user requests. They focus on read operations
  * and data presentation without modifying system state.
- * 
+ *
  * Key Banking Responsibilities:
  * - Enforce data access permissions and privacy rules
  * - Optimize queries for performance and scalability
  * - Implement caching strategies for frequently accessed data
  * - Transform raw data into business-friendly formats
  * - Handle pagination for large result sets
- * 
+ *
  * @param <T> Type of query this handler processes
  * @param <R> Type of result returned by query processing
  */
@@ -22,7 +28,7 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Handles a banking query and returns the requested data
-     * 
+     *
      * Business Rules:
      * - Validate user permissions before accessing data
      * - Apply data privacy and masking rules as required
@@ -30,7 +36,7 @@ public interface QueryHandler<T extends Query, R> {
      * - Handle pagination efficiently for large datasets
      * - Log data access for audit compliance
      * - Return data in consistent, well-formatted responses
-     * 
+     *
      * Implementation Guidelines:
      * - Use read-only database connections when possible
      * - Implement proper error handling with meaningful messages
@@ -38,7 +44,7 @@ public interface QueryHandler<T extends Query, R> {
      * - Use caching for expensive or frequently accessed queries
      * - Validate user access rights before returning sensitive data
      * - Handle timeouts gracefully for complex queries
-     * 
+     *
      * @param query The query to process
      * @return Query result containing requested data
      * @throws QueryValidationException if query fails validation
@@ -49,10 +55,10 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Returns the type of query this handler processes
-     * 
+     *
      * Used by the query dispatcher to route queries to appropriate handlers.
      * Default implementation uses reflection to determine the query type.
-     * 
+     *
      * @return Class type of the query this handler processes
      */
     default Class<T> getQueryType() {
@@ -61,11 +67,11 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Indicates whether this handler supports caching
-     * 
+     *
      * Banking data has different caching requirements. Account balances
      * and transactions need fresh data, while reference data (currencies,
      * country codes) can be cached for longer periods.
-     * 
+     *
      * @return true if query results can be cached, false otherwise
      */
     default boolean supportsCaching() {
@@ -74,12 +80,12 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Returns default cache TTL in seconds for this query type
-     * 
+     *
      * Different banking data types have different freshness requirements:
      * - Real-time data (balances): 0-30 seconds
      * - Transactional data (history): 5-15 minutes
      * - Reference data (codes): several hours
-     * 
+     *
      * @return Default cache time-to-live in seconds
      */
     default int getDefaultCacheTtlSeconds() {
@@ -88,11 +94,11 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Indicates whether stale cached data can be served
-     * 
+     *
      * Banking systems must balance performance with data accuracy.
      * Some queries can serve slightly stale data during high load,
      * while others must always return current data.
-     * 
+     *
      * @return true if stale data is acceptable, false for real-time requirements
      */
     default boolean canServeStaleData() {
@@ -101,10 +107,10 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Returns the timeout for query processing in milliseconds
-     * 
+     *
      * Banking queries must complete within reasonable timeframes
      * to ensure good user experience and prevent resource exhaustion.
-     * 
+     *
      * @return Query processing timeout in milliseconds
      */
     default long getTimeoutMillis() {
@@ -113,10 +119,10 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Indicates whether this query requires authentication
-     * 
+     *
      * Most banking queries require user authentication, but some
      * public queries (exchange rates, branch locations) might not.
-     * 
+     *
      * @return true if authentication is required, false otherwise
      */
     default boolean requiresAuthentication() {
@@ -125,10 +131,10 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Returns required permissions for this query type
-     * 
+     *
      * Banking systems have fine-grained access control. This method
      * returns the permissions needed to execute this query.
-     * 
+     *
      * @return Array of required permission strings
      */
     default String[] getRequiredPermissions() {
@@ -137,10 +143,10 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Validates user access rights for the specific query
-     * 
+     *
      * Provides a hook for implementing custom access control logic
      * based on the specific query parameters and user context.
-     * 
+     *
      * @param query Query containing user context and parameters
      * @param userPermissions User's current permissions
      * @throws UnauthorizedAccessException if access should be denied
@@ -160,10 +166,10 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Creates cache key for query results
-     * 
+     *
      * Generates a unique cache key based on query parameters and user context.
      * Must include all parameters that affect the query result.
-     * 
+     *
      * @param query Query to create cache key for
      * @return Cache key for storing/retrieving results
      */
@@ -177,10 +183,10 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Applies data masking rules to query results
-     * 
+     *
      * Banking systems must protect sensitive data by masking or filtering
      * information based on user roles and data sensitivity.
-     * 
+     *
      * @param result Original query result
      * @param query Query context including user information
      * @return Masked/filtered result appropriate for the user
@@ -193,10 +199,10 @@ public interface QueryHandler<T extends Query, R> {
 
     /**
      * Creates audit context for query processing
-     * 
+     *
      * Banking systems require comprehensive audit trails for data access.
      * This method creates standard audit context for compliance reporting.
-     * 
+     *
      * @param query Query being processed
      * @return Audit context for logging and compliance
      */
