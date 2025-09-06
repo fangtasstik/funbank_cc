@@ -83,7 +83,7 @@ services:
     image: adminer:4.8.1
     container_name: funbank-adminer
     ports:
-      - "8080:8080"
+      - "8083:8080"
     networks:
       - funbank-network
     restart: unless-stopped
@@ -126,6 +126,68 @@ services:
     restart: unless-stopped
     depends_on:
       - redis
+
+  # Spring Cloud Config Server - Centralized configuration management
+  funbank-config-server:
+    build:
+      context: ./funbank-config-server
+      dockerfile: Dockerfile
+    container_name: funbank-config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/config/actuator/health"]
+      timeout: 10s
+      retries: 5
+
+  # Eureka Service Registry - Service discovery and registration
+  funbank-service-registry:
+    build:
+      context: ./funbank-service-registry
+      dockerfile: Dockerfile
+    container_name: funbank-service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      funbank-config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      timeout: 10s
+      retries: 5
+
+  # API Gateway - Single entry point for all microservices
+  funbank-api-gateway:
+    build:
+      context: ./funbank-api-gateway
+      dockerfile: Dockerfile
+    container_name: funbank-api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      funbank-config-server:
+        condition: service_healthy
+      funbank-service-registry:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      timeout: 10s
+      retries: 5
 
 # Persistent storage volumes for banking data
 # These volumes ensure data persistence across container restarts

@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: funbank-api-gateway
+  
+  config:
+    import: "optional:configserver:http://funbank-config-server:8888/config"
+  
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://funbank-service-registry:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,metrics
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+info:
+  app:
+    name: Funbank API Gateway
+    description: Spring Cloud Gateway for Funbank banking system
+    version: 1.0.0
+
+logging:
+  level:
+    com.funbank: INFO
+    org.springframework.cloud.gateway: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
