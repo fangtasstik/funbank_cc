@@ -6,27 +6,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
-        <relativePath/>
+        <groupId>com.funbank</groupId>
+        <artifactId>funbank-parent</artifactId>
+        <version>1.0.0</version>
     </parent>
 
-    <groupId>com.funbank</groupId>
     <artifactId>funbank-service-registry</artifactId>
-    <version>1.0.0</version>
     <packaging>jar</packaging>
     
     <name>Funbank Service Registry</name>
     <description>Eureka Service Registry for Funbank Banking System</description>
 
-    <properties>
-        <java.version>17</java.version>
-        <spring-cloud.version>2022.0.4</spring-cloud.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <!-- All properties inherited from parent -->
 
     <dependencies>
         <!-- Eureka Server -->
@@ -63,17 +54,7 @@
         </dependency>
     </dependencies>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <!-- Dependency management inherited from parent -->
 
     <build>
         <plugins>

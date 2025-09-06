@@ -5,9 +5,13 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.funbank</groupId>
+    <parent>
+        <groupId>com.funbank</groupId>
+        <artifactId>funbank-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
     <artifactId>funbank-common</artifactId>
-    <version>1.0.0</version>
     <packaging>jar</packaging>
 
     <name>Funbank Common</name>
@@ -17,61 +21,7 @@
         and common banking domain objects for microservices architecture.
     </description>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
-        <relativePath/>
-    </parent>
-
-    <properties>
-        <java.version>17</java.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- Banking industry-standard dependencies -->
-        <spring-cloud.version>2022.0.4</spring-cloud.version>
-        <jwt.version>0.11.5</jwt.version>
-        <opentelemetry.version>1.53.0</opentelemetry.version>
-        <opentelemetry-instrumentation.version>2.19.0</opentelemetry-instrumentation.version>
-
-        <!-- Testing dependencies aligned with Suncorp requirements -->
-        <testcontainers.version>1.19.1</testcontainers.version>
-        <wiremock.version>3.2.0</wiremock.version>
-        <pact.version>4.6.2</pact.version>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- Spring Cloud BOM for version management -->
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- OpenTelemetry Instrumentation BOM for annotations and instrumentations -->
-            <dependency>
-                <groupId>io.opentelemetry.instrumentation</groupId>
-                <artifactId>opentelemetry-instrumentation-bom</artifactId>
-                <version>${opentelemetry-instrumentation.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- OpenTelemetry Core BOM for SDK and API -->
-            <dependency>
-                <groupId>io.opentelemetry</groupId>
-                <artifactId>opentelemetry-bom</artifactId>
-                <version>${opentelemetry.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <!-- All dependency management is now inherited from parent -->
 
     <dependencies>
         <!-- Spring Boot Core Dependencies -->
@@ -114,18 +64,15 @@
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
-            <version>${jwt.version}</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
-            <version>${jwt.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
-            <version>${jwt.version}</version>
             <scope>runtime</scope>
         </dependency>
 
