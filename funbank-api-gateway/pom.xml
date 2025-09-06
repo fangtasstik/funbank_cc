@@ -89,6 +89,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Funbank Common -->
+        <dependency>
+            <groupId>com.funbank</groupId>
+            <artifactId>funbank-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Testing Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

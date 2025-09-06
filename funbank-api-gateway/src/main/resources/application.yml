@@ -12,8 +12,20 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false  # Using programmatic routes instead
           lower-case-service-id: true
+  
+  # Redis configuration for rate limiting
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
 
 eureka:
   client:
@@ -22,11 +34,19 @@ eureka:
   instance:
     prefer-ip-address: true
 
+# Funbank JWT Configuration
+funbank:
+  jwt:
+    secret: ${JWT_SECRET:YmFuay1zZWNyZXQta2V5LWZvci1kZXZlbG9wbWVudC1vbmx5LW5vdC1mb3ItcHJvZHVjdGlvbg==}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}  # 1 hour
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 days
+    issuer: ${JWT_ISSUER:funbank}
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway,metrics
+        include: health,info,gateway,metrics,routes,filters
   endpoint:
     health:
       show-details: always
@@ -36,12 +56,14 @@ management:
 info:
   app:
     name: Funbank API Gateway
-    description: Spring Cloud Gateway for Funbank banking system
+    description: Spring Cloud Gateway for Funbank banking system with integrated security
     version: 1.0.0
 
 logging:
   level:
     com.funbank: INFO
+    com.funbank.gateway.filter: DEBUG
     org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
