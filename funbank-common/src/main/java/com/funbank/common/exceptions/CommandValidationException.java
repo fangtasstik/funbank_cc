@@ -16,6 +16,15 @@ public class CommandValidationException extends ValidationException {
     private final String commandId;
 
     /**
+     * Creates command validation exception with simple message
+     */
+    public CommandValidationException(String message) {
+        super("VALIDATION_ERROR", message, message);
+        this.commandType = "UNKNOWN";
+        this.commandId = null;
+    }
+
+    /**
      * Creates command validation exception for single field validation failure
      */
     public CommandValidationException(String commandType, String commandId, 

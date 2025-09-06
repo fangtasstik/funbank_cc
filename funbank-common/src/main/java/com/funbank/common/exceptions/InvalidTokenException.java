@@ -15,6 +15,16 @@ public class InvalidTokenException extends FunbankException {
     private final String tokenId;
 
     /**
+     * Creates invalid token exception with simple message
+     */
+    public InvalidTokenException(String message) {
+        super("INVALID_TOKEN", message, "Invalid authentication token. Please log in again.");
+        this.tokenType = "UNKNOWN";
+        this.invalidationReason = "UNKNOWN";
+        this.tokenId = null;
+    }
+
+    /**
      * Creates invalid token exception with basic information
      */
     public InvalidTokenException(String message, Throwable cause) {
