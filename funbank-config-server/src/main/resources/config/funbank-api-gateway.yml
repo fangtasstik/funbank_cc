@@ -54,10 +54,11 @@ spring:
             maxAge: 3600
 
   # Redis for rate limiting
-  redis:
-    host: ${funbank.datasource.redis.host}
-    port: ${funbank.datasource.redis.port}
-    password: ${funbank.datasource.redis.password}
+  data:
+    redis:
+      host: ${funbank.datasource.redis.host}
+      port: ${funbank.datasource.redis.port}
+      password: ${funbank.datasource.redis.password}
 
 # Gateway specific configuration
 funbank:

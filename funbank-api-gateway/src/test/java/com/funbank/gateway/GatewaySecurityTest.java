@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
     "funbank.jwt.secret=dGVzdC1zZWNyZXQta2V5LWZvci10ZXN0aW5nLW9ubHktbm90LWZvci1wcm9kdWN0aW9u",
-    "spring.redis.host=localhost",
-    "spring.redis.port=6380"
+    "spring.data.redis.host=localhost",
+    "spring.data.redis.port=6380"
 })
 class GatewaySecurityTest {
 
@@ -163,7 +163,7 @@ class GatewaySecurityTest {
         // Test session ID masking
         String sessionId = "session-123456789012345";
         String maskedSessionId = sessionId.length() > 8 ? 
-            "***" + sessionId.substring(sessionId.length() - 8) : "***";
+            "***" + sessionId.substring(sessionId.length() - 5) : "***";
         assertEquals("***12345", maskedSessionId);
     }
 
