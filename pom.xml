@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -9,7 +9,7 @@
     <artifactId>funbank-parent</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
-    
+
     <name>Funbank Banking System</name>
     <description>Event-driven microservices banking system with Spring Cloud</description>
 
@@ -19,31 +19,31 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        
+
         <!-- Spring Boot & Cloud Versions -->
         <spring-boot.version>3.1.5</spring-boot.version>
         <spring-cloud.version>2022.0.4</spring-cloud.version>
-        
+
         <!-- Database Versions -->
-        <mysql-connector.version>8.1.0</mysql-connector.version>
+        <mysql-connector.version>8.0.33</mysql-connector.version>
         <mongodb.version>4.10.2</mongodb.version>
-        
+
         <!-- Security & JWT Versions -->
         <jjwt.version>0.11.5</jjwt.version>
-        
+
         <!-- Testing Versions (Suncorp-aligned) -->
         <junit.version>5.10.0</junit.version>
         <mockito.version>5.5.0</mockito.version>
         <assertj.version>3.24.2</assertj.version>
         <testcontainers.version>1.19.1</testcontainers.version>
         <wiremock.version>3.2.0</wiremock.version>
-        <rest-assured.version>5.3.2</rest-assured.version>
+        <rest-assured.version>5.3.0</rest-assured.version>
         <pact.version>4.5.7</pact.version>
-        
+
         <!-- Observability Versions -->
         <opentelemetry.version>1.25.0</opentelemetry.version>
         <opentelemetry-instrumentation.version>1.32.1</opentelemetry-instrumentation.version>
-        
+
         <!-- Maven Plugin Versions -->
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
@@ -70,7 +70,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Spring Cloud BOM -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
@@ -79,27 +79,27 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Internal Dependencies -->
             <dependency>
                 <groupId>com.funbank</groupId>
                 <artifactId>funbank-common</artifactId>
-                <version>${project.version}</version>
+                <!--<version>${project.version}</version>-->
             </dependency>
-            
+
             <!-- Database Dependencies -->
             <dependency>
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector.version}</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.mongodb</groupId>
                 <artifactId>mongodb-driver-sync</artifactId>
                 <version>${mongodb.version}</version>
             </dependency>
-            
+
             <!-- JWT Dependencies -->
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
@@ -116,7 +116,7 @@
                 <artifactId>jjwt-jackson</artifactId>
                 <version>${jjwt.version}</version>
             </dependency>
-            
+
             <!-- OpenTelemetry BOM - must come first -->
             <dependency>
                 <groupId>io.opentelemetry</groupId>
@@ -125,7 +125,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- OpenTelemetry Instrumentation BOM -->
             <dependency>
                 <groupId>io.opentelemetry.instrumentation</groupId>
@@ -134,7 +134,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- Testing Dependencies -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -142,21 +142,21 @@
                 <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>${mockito.version}</version>
                 <scope>test</scope>
             </dependency>
-            
+
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
                 <version>${assertj.version}</version>
                 <scope>test</scope>
             </dependency>
-            
+
             <!-- TestContainers BOM -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
@@ -165,7 +165,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
             <!-- WireMock -->
             <dependency>
                 <groupId>com.github.tomakehurst</groupId>
@@ -173,7 +173,7 @@
                 <version>${wiremock.version}</version>
                 <scope>test</scope>
             </dependency>
-            
+
             <!-- REST Assured -->
             <dependency>
                 <groupId>io.rest-assured</groupId>
@@ -181,7 +181,7 @@
                 <version>${rest-assured.version}</version>
                 <scope>test</scope>
             </dependency>
-            
+
             <!-- Pact JV -->
             <dependency>
                 <groupId>au.com.dius.pact.consumer</groupId>
@@ -209,7 +209,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- Maven Compiler Plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -221,7 +221,7 @@
                         <encoding>${project.build.sourceEncoding}</encoding>
                     </configuration>
                 </plugin>
-                
+
                 <!-- Surefire Plugin (Unit Tests) -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -238,7 +238,7 @@
                         </excludes>
                     </configuration>
                 </plugin>
-                
+
                 <!-- Failsafe Plugin (Integration Tests) -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -259,7 +259,7 @@
                         </execution>
                     </executions>
                 </plugin>
-                
+
                 <!-- JaCoCo Plugin (Code Coverage) -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
@@ -302,24 +302,24 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-        
+
         <!-- Default Plugins Applied to All Modules -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-            
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
-            
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
             </plugin>
-            
+
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -338,21 +338,21 @@
                 <spring.profiles.active>local</spring.profiles.active>
             </properties>
         </profile>
-        
+
         <profile>
             <id>docker</id>
             <properties>
                 <spring.profiles.active>docker</spring.profiles.active>
             </properties>
         </profile>
-        
+
         <profile>
             <id>test</id>
             <properties>
                 <spring.profiles.active>test</spring.profiles.active>
             </properties>
         </profile>
-        
+
         <profile>
             <id>prod</id>
             <properties>

@@ -9,6 +9,7 @@
         <groupId>com.funbank</groupId>
         <artifactId>funbank-parent</artifactId>
         <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>funbank-config-server</artifactId>
