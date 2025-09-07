@@ -16,8 +16,7 @@ spring:
         native:
           search-locations: classpath:/config,file:./config-repo
         health:
-          repositories:
-            enabled: true
+          enabled: true
 
 security:
   user:
