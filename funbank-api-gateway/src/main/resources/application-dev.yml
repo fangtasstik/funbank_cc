@@ -1,0 +1,32 @@
+# Development environment configuration
+spring:
+  profiles:
+    active: dev
+
+# Development-specific JWT configuration
+funbank:
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}  # 1 hour (shorter for dev)
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000}  # 1 day (shorter for dev)
+
+# Development logging - more verbose for debugging
+logging:
+  level:
+    com.funbank: DEBUG
+    com.funbank.gateway.filter: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    
+# Development CORS - more permissive
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:3000"
+            allowedMethods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600

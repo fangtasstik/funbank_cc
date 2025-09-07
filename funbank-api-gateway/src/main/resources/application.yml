@@ -8,24 +8,43 @@ spring:
   config:
     import: "optional:configserver:http://funbank-config-server:8888/config"
   
-  cloud:
-    gateway:
-      discovery:
-        locator:
-          enabled: false  # Using programmatic routes instead
-          lower-case-service-id: true
   
   # Redis configuration for rate limiting
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
+    password: ${REDIS_PASSWORD:password}
     timeout: 2000ms
     lettuce:
       pool:
         max-active: 8
         max-idle: 8
         min-idle: 0
+  
+  cloud:
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenish-rate: 10
+            redis-rate-limiter.burst-capacity: 20
+            redis-rate-limiter.requested-tokens: 1
+            key-resolver: "#{@userKeyResolver}"
+      discovery:
+        locator:
+          enabled: false  # Using programmatic routes instead
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}"
+            allowedMethods: GET,POST,PUT,DELETE,OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10000
 
 eureka:
   client:
@@ -37,7 +56,7 @@ eureka:
 # Funbank JWT Configuration
 funbank:
   jwt:
-    secret: ${JWT_SECRET:YmFuay1zZWNyZXQta2V5LWZvci1kZXZlbG9wbWVudC1vbmx5LW5vdC1mb3ItcHJvZHVjdGlvbg==}
+    secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:3600000}  # 1 hour
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 days
     issuer: ${JWT_ISSUER:funbank}
@@ -46,7 +65,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway,metrics,routes,filters
+        include: health,info
   endpoint:
     health:
       show-details: always
@@ -62,8 +81,8 @@ info:
 logging:
   level:
     com.funbank: INFO
-    com.funbank.gateway.filter: DEBUG
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.security: DEBUG
+    com.funbank.gateway.filter: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

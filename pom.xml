@@ -41,7 +41,8 @@
         <pact.version>4.5.7</pact.version>
         
         <!-- Observability Versions -->
-        <opentelemetry.version>1.31.0</opentelemetry.version>
+        <opentelemetry.version>1.25.0</opentelemetry.version>
+        <opentelemetry-instrumentation.version>1.32.1</opentelemetry-instrumentation.version>
         
         <!-- Maven Plugin Versions -->
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
@@ -116,11 +117,20 @@
                 <version>${jjwt.version}</version>
             </dependency>
             
-            <!-- OpenTelemetry BOM -->
+            <!-- OpenTelemetry BOM - must come first -->
             <dependency>
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-bom</artifactId>
                 <version>${opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            
+            <!-- OpenTelemetry Instrumentation BOM -->
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom</artifactId>
+                <version>${opentelemetry-instrumentation.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
