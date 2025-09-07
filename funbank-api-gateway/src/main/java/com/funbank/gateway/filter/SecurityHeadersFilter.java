@@ -4,20 +4,20 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 /**
- * Security Headers Filter for Banking API Gateway
+ * Banking-Grade Security Headers Filter for API Gateway
  *
- * Adds essential security headers to all API responses to protect against
- * common web vulnerabilities and ensure banking-grade security standards.
+ * Implements OWASP Secure Headers and PCI-DSS compliant security headers
+ * for banking applications. Follows Spring Cloud Gateway best practices
+ * for response header modification.
  *
- * Banking Security Headers:
- * - Content Security Policy (CSP) for XSS protection
- * - X-Frame-Options to prevent clickjacking
- * - X-Content-Type-Options to prevent MIME sniffing
- * - Strict-Transport-Security for HTTPS enforcement
- * - X-XSS-Protection for legacy XSS protection
- * - Referrer-Policy to control referrer information
+ * Banking Security Standards:
+ * - OWASP Secure Headers recommendations
+ * - PCI-DSS compliance requirements
+ * - Financial industry security guidelines
+ * - Anti-fraud and data protection headers
  */
 @Component
 public class SecurityHeadersFilter extends AbstractGatewayFilterFactory<SecurityHeadersFilter.Config> {
@@ -28,77 +28,58 @@ public class SecurityHeadersFilter extends AbstractGatewayFilterFactory<Security
 
     @Override
     public GatewayFilter apply(Config config) {
-        return (exchange, chain) -> {
-            return chain.filter(exchange).then(
-                org.springframework.web.server.ServerResponse.from(exchange.getResponse())
-                    .headers(headers -> addSecurityHeaders(headers, config))
-                    .build()
-                    .flatMap(response -> {
-                        // Add security headers to the response
-                        addSecurityHeaders(exchange.getResponse().getHeaders(), config);
-                        return org.springframework.web.reactive.function.server.ServerResponse.ok().build()
-                            .then();
-                    })
-                    .onErrorResume(throwable -> {
-                        // Still add security headers even on error
-                        addSecurityHeaders(exchange.getResponse().getHeaders(), config);
-                        return org.springframework.web.reactive.function.server.ServerResponse.ok().build()
-                            .then();
-                    })
-                    .then()
-            );
-        };
+        return (exchange, chain) -> chain.filter(exchange)
+            .then(Mono.fromRunnable(() -> {
+                HttpHeaders headers = exchange.getResponse().getHeaders();
+                addBankingSecurityHeaders(headers, config);
+            }));
     }
 
     /**
-     * Adds banking-grade security headers to HTTP response
+     * Adds banking-grade security headers following OWASP and PCI-DSS standards
      *
-     * @param headers HTTP headers to modify
+     * @param headers HTTP response headers to modify
      * @param config Filter configuration
      */
-    private void addSecurityHeaders(HttpHeaders headers, Config config) {
+    private void addBankingSecurityHeaders(HttpHeaders headers, Config config) {
+        // Strict Transport Security - Force HTTPS for banking security
+        if (config.isEnableHSTS()) {
+            headers.add("Strict-Transport-Security", 
+                "max-age=31536000; includeSubDomains; preload");
+        }
+
+        // Prevent MIME type sniffing - Critical for banking applications
+        if (config.isEnableContentTypeOptions()) {
+            headers.add("X-Content-Type-Options", "nosniff");
+        }
+
+        // Prevent clickjacking - Essential for banking forms and payments
+        if (config.isEnableFrameOptions()) {
+            headers.add("X-Frame-Options", "DENY");
+        }
+
         // Content Security Policy - Strict policy for banking applications
         if (config.isEnableCSP()) {
             headers.add("Content-Security-Policy", 
                 "default-src 'self'; " +
-                "script-src 'self' 'unsafe-inline'; " +
+                "script-src 'self'; " +
                 "style-src 'self' 'unsafe-inline'; " +
                 "img-src 'self' data: https:; " +
                 "font-src 'self' https:; " +
                 "connect-src 'self' https:; " +
                 "frame-ancestors 'none'; " +
                 "base-uri 'self'; " +
-                "form-action 'self'"
+                "form-action 'self'; " +
+                "upgrade-insecure-requests"
             );
         }
 
-        // Prevent clickjacking attacks
-        if (config.isEnableFrameOptions()) {
-            headers.add("X-Frame-Options", "DENY");
-        }
-
-        // Prevent MIME type sniffing
-        if (config.isEnableContentTypeOptions()) {
-            headers.add("X-Content-Type-Options", "nosniff");
-        }
-
-        // Enforce HTTPS for banking security
-        if (config.isEnableHSTS()) {
-            headers.add("Strict-Transport-Security", 
-                "max-age=31536000; includeSubDomains; preload");
-        }
-
-        // XSS Protection (legacy support)
-        if (config.isEnableXSSProtection()) {
-            headers.add("X-XSS-Protection", "1; mode=block");
-        }
-
-        // Control referrer policy
+        // Referrer Policy - Minimize data leakage in banking context
         if (config.isEnableReferrerPolicy()) {
-            headers.add("Referrer-Policy", "strict-origin-when-cross-origin");
+            headers.add("Referrer-Policy", "no-referrer");
         }
 
-        // Permissions Policy (formerly Feature Policy)
+        // Permissions Policy - Disable unnecessary browser features for banking
         if (config.isEnablePermissionsPolicy()) {
             headers.add("Permissions-Policy", 
                 "geolocation=(), " +
@@ -106,60 +87,92 @@ public class SecurityHeadersFilter extends AbstractGatewayFilterFactory<Security
                 "camera=(), " +
                 "payment=(), " +
                 "usb=(), " +
+                "serial=(), " +
+                "bluetooth=(), " +
                 "magnetometer=(), " +
                 "accelerometer=(), " +
-                "gyroscope=()"
+                "gyroscope=(), " +
+                "ambient-light-sensor=(), " +
+                "autoplay=(), " +
+                "fullscreen=()"
             );
         }
 
-        // Cache control for sensitive banking data
+        // Cache Control - Critical for banking data protection
         if (config.isEnableCacheControl()) {
-            headers.add("Cache-Control", "no-cache, no-store, must-revalidate, private");
+            headers.add("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
             headers.add("Pragma", "no-cache");
             headers.add("Expires", "0");
         }
 
-        // Additional banking security headers
+        // Cross-Origin policies for banking security
+        if (config.isEnableCrossOriginPolicies()) {
+            headers.add("Cross-Origin-Embedder-Policy", "require-corp");
+            headers.add("Cross-Origin-Opener-Policy", "same-origin");
+            headers.add("Cross-Origin-Resource-Policy", "same-origin");
+        }
+
+        // Banking-specific security headers
         if (config.isEnableBankingHeaders()) {
-            // Prevent caching of sensitive data
+            // Remove server information to prevent information disclosure
+            headers.remove("Server");
+            headers.add("Server", "Funbank-Secure-Gateway");
+            
+            // Custom banking security indicator
             headers.add("X-Banking-Security", "enabled");
             
-            // Custom header to indicate secure banking context
-            headers.add("X-Secure-Context", "banking");
+            // Financial context indicator
+            headers.add("X-Financial-Context", "secure");
             
-            // Prevent information disclosure
-            headers.add("Server", "Funbank-Gateway");
+            // Anti-fraud headers
+            headers.add("X-Content-Security", "enforced");
+        }
+
+        // Additional PCI-DSS compliance headers
+        if (config.isEnablePCIDSSHeaders()) {
+            // Ensure secure processing environment
+            headers.add("X-Secure-Processing", "enabled");
+            
+            // Data protection indicator
+            headers.add("X-Data-Classification", "confidential");
+            
+            // Audit trail header
+            headers.add("X-Security-Audit", "logged");
+        }
+
+        // Remove potentially sensitive default headers
+        if (config.isRemoveSensitiveHeaders()) {
+            headers.remove("X-Powered-By");
+            headers.remove("X-AspNet-Version");
+            headers.remove("X-AspNetMvc-Version");
+            headers.remove("X-Runtime");
+            headers.remove("X-Version");
         }
     }
 
     /**
-     * Configuration class for Security Headers Filter
+     * Configuration class for Banking Security Headers Filter
      */
     public static class Config {
-        private boolean enableCSP = true;
-        private boolean enableFrameOptions = true;
-        private boolean enableContentTypeOptions = true;
         private boolean enableHSTS = true;
-        private boolean enableXSSProtection = true;
+        private boolean enableContentTypeOptions = true;
+        private boolean enableFrameOptions = true;
+        private boolean enableCSP = true;
         private boolean enableReferrerPolicy = true;
         private boolean enablePermissionsPolicy = true;
         private boolean enableCacheControl = true;
+        private boolean enableCrossOriginPolicies = true;
         private boolean enableBankingHeaders = true;
+        private boolean enablePCIDSSHeaders = true;
+        private boolean removeSensitiveHeaders = true;
 
-        public boolean isEnableCSP() {
-            return enableCSP;
+        // Getters and setters
+        public boolean isEnableHSTS() {
+            return enableHSTS;
         }
 
-        public void setEnableCSP(boolean enableCSP) {
-            this.enableCSP = enableCSP;
-        }
-
-        public boolean isEnableFrameOptions() {
-            return enableFrameOptions;
-        }
-
-        public void setEnableFrameOptions(boolean enableFrameOptions) {
-            this.enableFrameOptions = enableFrameOptions;
+        public void setEnableHSTS(boolean enableHSTS) {
+            this.enableHSTS = enableHSTS;
         }
 
         public boolean isEnableContentTypeOptions() {
@@ -170,20 +183,20 @@ public class SecurityHeadersFilter extends AbstractGatewayFilterFactory<Security
             this.enableContentTypeOptions = enableContentTypeOptions;
         }
 
-        public boolean isEnableHSTS() {
-            return enableHSTS;
+        public boolean isEnableFrameOptions() {
+            return enableFrameOptions;
         }
 
-        public void setEnableHSTS(boolean enableHSTS) {
-            this.enableHSTS = enableHSTS;
+        public void setEnableFrameOptions(boolean enableFrameOptions) {
+            this.enableFrameOptions = enableFrameOptions;
         }
 
-        public boolean isEnableXSSProtection() {
-            return enableXSSProtection;
+        public boolean isEnableCSP() {
+            return enableCSP;
         }
 
-        public void setEnableXSSProtection(boolean enableXSSProtection) {
-            this.enableXSSProtection = enableXSSProtection;
+        public void setEnableCSP(boolean enableCSP) {
+            this.enableCSP = enableCSP;
         }
 
         public boolean isEnableReferrerPolicy() {
@@ -210,12 +223,36 @@ public class SecurityHeadersFilter extends AbstractGatewayFilterFactory<Security
             this.enableCacheControl = enableCacheControl;
         }
 
+        public boolean isEnableCrossOriginPolicies() {
+            return enableCrossOriginPolicies;
+        }
+
+        public void setEnableCrossOriginPolicies(boolean enableCrossOriginPolicies) {
+            this.enableCrossOriginPolicies = enableCrossOriginPolicies;
+        }
+
         public boolean isEnableBankingHeaders() {
             return enableBankingHeaders;
         }
 
         public void setEnableBankingHeaders(boolean enableBankingHeaders) {
             this.enableBankingHeaders = enableBankingHeaders;
+        }
+
+        public boolean isEnablePCIDSSHeaders() {
+            return enablePCIDSSHeaders;
+        }
+
+        public void setEnablePCIDSSHeaders(boolean enablePCIDSSHeaders) {
+            this.enablePCIDSSHeaders = enablePCIDSSHeaders;
+        }
+
+        public boolean isRemoveSensitiveHeaders() {
+            return removeSensitiveHeaders;
+        }
+
+        public void setRemoveSensitiveHeaders(boolean removeSensitiveHeaders) {
+            this.removeSensitiveHeaders = removeSensitiveHeaders;
         }
     }
 }
