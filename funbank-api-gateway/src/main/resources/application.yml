@@ -5,9 +5,6 @@ spring:
   application:
     name: funbank-api-gateway
   
-  config:
-    import: "optional:configserver:http://funbank-config-server:8888/config"
-  
   
   # Redis configuration for rate limiting
   data:

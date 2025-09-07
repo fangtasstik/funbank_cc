@@ -1,7 +1,9 @@
 # Development environment configuration  
 spring:
-  # Development CORS - more permissive
+  # Disable external config server for local dev
   cloud:
+    config:
+      enabled: false
     gateway:
       globalcors:
         cors-configurations:
@@ -11,6 +13,11 @@ spring:
             allowedHeaders: "*"
             allowCredentials: true
             maxAge: 3600
+
+# Disable Eureka client for local dev
+eureka:
+  client:
+    enabled: false
 
 # Development-specific JWT configuration
 funbank:
