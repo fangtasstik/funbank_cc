@@ -26,7 +26,7 @@ security:
   jwt:
     secret: funbank-jwt-secret-key-2024-banking-system
     expiration: 86400000 # 24 hours
-  
+
 # Logging Configuration
 logging:
   level:
@@ -44,7 +44,7 @@ management:
   endpoint:
     health:
       show-details: always
-  metrics:
-    export:
-      prometheus:
+  prometheus:
+    metrics:
+      export:
         enabled: true
