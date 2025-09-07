@@ -96,11 +96,34 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Funbank Common -->
+        <!-- Funbank Common - Exclude Servlet dependencies for Gateway -->
         <dependency>
             <groupId>com.funbank</groupId>
             <artifactId>funbank-common</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <!-- Exclude Servlet stack to avoid conflict with WebFlux -->
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-data-jpa</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-data-mongodb</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-webmvc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-web</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Testing Dependencies -->
