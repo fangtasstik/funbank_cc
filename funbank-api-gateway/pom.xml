@@ -95,6 +95,13 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        
+        <!-- Dotenv Java for .env file support -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
+        </dependency>
 
         <!-- Funbank Common - Exclude Servlet dependencies for Gateway -->
         <dependency>

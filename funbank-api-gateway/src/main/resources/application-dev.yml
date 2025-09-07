@@ -1,7 +1,16 @@
-# Development environment configuration
+# Development environment configuration  
 spring:
-  profiles:
-    active: dev
+  # Development CORS - more permissive
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:3000"
+            allowedMethods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
 
 # Development-specific JWT configuration
 funbank:
@@ -17,16 +26,3 @@ logging:
     com.funbank.gateway.filter: DEBUG
     org.springframework.cloud.gateway: DEBUG
     org.springframework.security: DEBUG
-    
-# Development CORS - more permissive
-spring:
-  cloud:
-    gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:3000"
-            allowedMethods: GET,POST,PUT,DELETE,OPTIONS,PATCH
-            allowedHeaders: "*"
-            allowCredentials: true
-            maxAge: 3600
