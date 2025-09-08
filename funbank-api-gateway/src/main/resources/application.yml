@@ -4,8 +4,10 @@ server:
 spring:
   application:
     name: funbank-api-gateway
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}  # Default to dev profile
   config:
-    import: "optional:configserver:http://localhost:8888/config"
+    import: "optional:configserver:http://localhost:8888/config/"
   
   # Redis configuration for rate limiting
   data:
