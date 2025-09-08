@@ -14,10 +14,7 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
-# Disable Eureka client for local dev
-eureka:
-  client:
-    enabled: false
+# Eureka is disabled by default in application.yml for development
 
 # Development-specific JWT configuration  
 funbank:

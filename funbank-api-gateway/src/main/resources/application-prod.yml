@@ -35,6 +35,13 @@ funbank:
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 days
     issuer: ${JWT_ISSUER:funbank-prod}
 
+# Production Eureka configuration
+eureka:
+  client:
+    enabled: true  # Enable Eureka for production
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://funbank-service-registry:8761/eureka/}
+
 # Production logging - minimal for performance
 logging:
   level:
