@@ -19,7 +19,12 @@ public class FunbankApiGatewayApplication {
     private static void loadEnvironmentVariables() {
         try {
             // Try multiple locations for .env file
-            String[] locations = {"./", System.getProperty("user.dir")};
+            String[] locations = {
+                "./",                                          // Current working directory
+                System.getProperty("user.dir"),               // User directory (usually same as ./)
+                "./funbank-api-gateway/",                     // Application module directory
+                System.getProperty("user.dir") + "/funbank-api-gateway/"  // Absolute module path
+            };
             Dotenv dotenv = null;
             
             for (String location : locations) {
