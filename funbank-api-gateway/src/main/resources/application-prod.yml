@@ -2,7 +2,9 @@
 spring:
   # Enable config server for production
   config:
-    import: "configserver:http://funbank-config-server:8888/config"
+    import: "configserver:http://funbank-config:funbank-config-2024@funbank-config-server:8888/config"
+    username: funbank-config
+    password: funbank-config-2024
   
   # Production Redis configuration
   data:

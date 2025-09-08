@@ -8,6 +8,8 @@ spring:
       retry:
         max-attempts: 1  # Only try once in dev
         initial-interval: 1000
+      username: ${CONFIG_SERVER_USERNAME:funbank-config}  # Config server authentication
+      password: ${CONFIG_SERVER_PASSWORD:funbank-config-2024}
     gateway:
       globalcors:
         cors-configurations:
