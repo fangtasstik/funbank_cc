@@ -1,9 +1,13 @@
 # Development environment configuration  
 spring:
-  # Disable external config server for local dev
+  # Enable config server for dev (but make it optional)
   cloud:
     config:
-      enabled: false
+      enabled: true
+      fail-fast: false  # Don't fail if config server is unavailable
+      retry:
+        max-attempts: 1  # Only try once in dev
+        initial-interval: 1000
     gateway:
       globalcors:
         cors-configurations:
@@ -14,7 +18,22 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
-# Eureka is disabled by default in application.yml for development
+# Enable Eureka for dev (with localhost URLs)
+eureka:
+  client:
+    enabled: true
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5  # Faster lease renewal for dev
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5  # Faster heartbeat in dev
+    lease-expiration-duration-in-seconds: 10
 
 # Development-specific JWT configuration  
 funbank:

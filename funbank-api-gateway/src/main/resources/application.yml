@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: funbank-api-gateway
+  config:
+    import: "optional:configserver:http://localhost:8888/config"
   
   # Redis configuration for rate limiting
   data:
@@ -19,8 +21,6 @@ spring:
           min-idle: 0
   
   cloud:
-    config:
-      enabled: false
     gateway:
       default-filters:
         - name: RequestRateLimiter
