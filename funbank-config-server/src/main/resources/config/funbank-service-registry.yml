@@ -1,0 +1,35 @@
+# Configuration for Funbank Service Registry (Eureka Server)
+server:
+  port: 8761
+
+spring:
+  application:
+    name: funbank-service-registry
+
+eureka:
+  instance:
+    hostname: funbank-service-registry
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+  server:
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 10000
+    renewal-percent-threshold: 0.85
+
+# Banking-specific Eureka configuration
+funbank:
+  eureka:
+    security:
+      enabled: false # Will be enabled in production
+    monitoring:
+      enabled: true
+      health-check-interval: 30
+    registration:
+      timeout: 10000
+      retry-attempts: 3

@@ -1,0 +1,65 @@
+docs/
+rules/
+.claude/
+
+# Build outputs
+target/
+*.class
+*.jar
+*.war
+
+# IDE files
+.DS_Store
+.idea/
+*.iml
+.vscode/
+
+# Log files
+*.log
+logs/
+gateway.log
+
+# Large binary files
+*.jar
+!opentelemetry-javaagent.jar
+opentelemetry-javaagent.jar
+
+# Docker volumes and data
+docker-data/
+data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files with sensitive data
+.env.local
+.env.production
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+*.swp
+*.swo
+
+# Large test outputs
+test-results/
+coverage/
+jacoco.exec
+
+# Node modules (if any frontend components)
+node_modules/
+
+# Generated documentation
+site/
+_site/

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <!-- Console Appender for local development -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File Appender for local logging -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/funbank-api-gateway.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/funbank-api-gateway.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Logstash TCP Appender for ELK Stack -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${LOGSTASH_HOST:localhost}:${LOGSTASH_PORT:5000}</destination>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <version/>
+                <logLevel/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+                <pattern>
+                    <pattern>
+                        {
+                            "service": "funbank-api-gateway",
+                            "environment": "${spring.profiles.active:-local}",
+                            "instance": "${HOSTNAME:-unknown}",
+                            "trace_id": "%X{traceId:-}",
+                            "span_id": "%X{spanId:-}"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+        <!-- Connection timeout and retry configuration -->
+        <connectionTimeout>5000</connectionTimeout>
+        <reconnectionDelay>1000</reconnectionDelay>
+        <writeBufferSize>16384</writeBufferSize>
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <!-- Async wrapper for Logstash to prevent blocking -->
+    <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="LOGSTASH"/>
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <!-- Root logger configuration -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <springProfile name="!test">
+            <appender-ref ref="ASYNC_LOGSTASH"/>
+        </springProfile>
+    </root>
+
+    <!-- Banking-specific loggers with enhanced logging -->
+    <logger name="com.funbank" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <springProfile name="!test">
+            <appender-ref ref="ASYNC_LOGSTASH"/>
+        </springProfile>
+    </logger>
+
+    <!-- Security-related logging -->
+    <logger name="org.springframework.security" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <springProfile name="!test">
+            <appender-ref ref="ASYNC_LOGSTASH"/>
+        </springProfile>
+    </logger>
+
+    <!-- Gateway-specific logging -->
+    <logger name="org.springframework.cloud.gateway" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <springProfile name="!test">
+            <appender-ref ref="ASYNC_LOGSTASH"/>
+        </springProfile>
+    </logger>
+
+    <!-- OpenTelemetry logging -->
+    <logger name="io.opentelemetry" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <springProfile name="!test">
+            <appender-ref ref="ASYNC_LOGSTASH"/>
+        </springProfile>
+    </logger>
+
+    <!-- Reduce noise from Spring internals in production -->
+    <springProfile name="prod">
+        <logger name="org.springframework" level="WARN"/>
+        <logger name="org.apache" level="WARN"/>
+        <logger name="com.netflix" level="WARN"/>
+    </springProfile>
+
+    <!-- Enhanced logging for development -->
+    <springProfile name="dev,local">
+        <logger name="org.springframework.web" level="DEBUG"/>
+        <logger name="org.springframework.cloud.loadbalancer" level="DEBUG"/>
+    </springProfile>
+</configuration>

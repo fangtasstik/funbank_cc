@@ -1,0 +1,66 @@
+# Test configuration for Funbank API Gateway
+# Optimized for Suncorp-aligned testing stack
+
+server:
+  port: 0  # Random port for tests
+
+spring:
+  application:
+    name: funbank-api-gateway-test
+    
+  # Disable external dependencies for unit tests
+  cloud:
+    config:
+      enabled: false
+      fail-fast: false
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+# Disable Eureka for tests
+eureka:
+  client:
+    enabled: false
+    fetch-registry: false
+    register-with-eureka: false
+
+# Test JWT configuration
+funbank:
+  jwt:
+    secret: dGVzdEp3dFNlY3JldEtleUZvclRlc3RpbmdNaW5pbXVtMzJDaGFyYWN0ZXJzTG9uZw==
+    expiration-ms: 3600000
+    refresh-expiration-ms: 86400000
+
+# Disable OpenTelemetry in tests to avoid external dependencies
+management:
+  tracing:
+    enabled: false
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics"
+
+# Test logging configuration
+logging:
+  level:
+    com.funbank: DEBUG
+    org.springframework.boot.test: DEBUG
+    org.testcontainers: INFO
+    au.com.dius.pact: INFO
+    com.github.tomakehurst.wiremock: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# TestContainers configuration
+testcontainers:
+  reuse:
+    enable: true

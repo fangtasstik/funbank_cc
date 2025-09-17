@@ -1,0 +1,50 @@
+# Default Configuration for All Funbank Services
+# This configuration is shared across all microservices
+
+# Database Configuration
+funbank:
+  datasource:
+    mysql:
+      host: mysql-db
+      port: 3306
+      database: funbank_db
+      username: funbank_user
+      password: funbank_pass_2024
+    mongodb:
+      host: mongodb
+      port: 27017
+      database: funbank_events
+      username: funbank_mongo_admin
+      password: funbank_mongo_2024
+    redis:
+      host: redis
+      port: 6379
+      password: funbank_redis_2024
+
+# Security Configuration
+security:
+  jwt:
+    secret: funbank-jwt-secret-key-2024-banking-system
+    expiration: 86400000 # 24 hours
+
+# Logging Configuration
+logging:
+  level:
+    com.funbank: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true

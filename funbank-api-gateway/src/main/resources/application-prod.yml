@@ -1,0 +1,67 @@
+# Production environment configuration
+spring:
+  # Enable config server for production
+  config:
+    import: "configserver:http://funbank-config:funbank-config-2024@funbank-config-server:8888/config"
+    username: funbank-config
+    password: funbank-config-2024
+  
+  # Production Redis configuration
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+  
+  # Production CORS - restrictive
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: ${CORS_ALLOWED_ORIGINS:https://your-prod-domain.com}
+            allowedMethods: GET,POST,PUT,DELETE
+            allowedHeaders: Authorization,Content-Type,X-Requested-With
+            allowCredentials: true
+            maxAge: 86400
+
+# Production JWT configuration - use environment variables for security
+funbank:
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration-ms: ${JWT_EXPIRATION_MS:1800000}  # 30 minutes (shorter for prod security)
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 days
+    issuer: ${JWT_ISSUER:funbank-prod}
+
+# Production Eureka configuration
+eureka:
+  client:
+    enabled: true  # Enable Eureka for production
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://funbank-service-registry:8761/eureka/}
+
+# Production logging - minimal for performance
+logging:
+  level:
+    com.funbank: WARN
+    com.funbank.gateway.filter: WARN
+    org.springframework.cloud.gateway: WARN
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+    root: ERROR
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Production management endpoints - more restrictive
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when-authorized

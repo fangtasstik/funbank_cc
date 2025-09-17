@@ -1,0 +1,335 @@
+version: '3.8'
+
+services:
+  # MySQL 8.0 - Primary relational database for users, accounts and reference data
+  # Configuration optimized for banking application with proper encoding and timezone
+  mysql-db:
+    image: mysql:8.0
+    container_name: funbank-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: funbank_root_2024
+      MYSQL_DATABASE: funbank_db
+      MYSQL_USER: funbank_user
+      MYSQL_PASSWORD: funbank_pass_2024
+      # Use UTF-8 for international banking support
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/conf:/etc/mysql/conf.d
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone='+00:00'
+      --innodb-buffer-pool-size=256M
+      --max-connections=200
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 20s
+      retries: 10
+
+  # MongoDB 6.0 - Event store and document storage for event sourcing
+  # Configured for banking-grade data persistence and replica set support
+  mongodb:
+    image: mongo:6.0
+    container_name: funbank-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: funbank_mongo_admin
+      MONGO_INITDB_ROOT_PASSWORD: funbank_mongo_2024
+      MONGO_INITDB_DATABASE: funbank_events
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongodb/init:/docker-entrypoint-initdb.d
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    command: mongod --auth --bind_ip_all
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      timeout: 10s
+      retries: 5
+
+  # Redis 7.0 - High-performance caching, session storage and distributed locks
+  # Optimized for banking session management and real-time data caching
+  redis:
+    image: redis:7.0-alpine
+    container_name: funbank-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    # Enable persistence and security for banking data
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass funbank_redis_2024
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "funbank_redis_2024", "ping"]
+      timeout: 5s
+      retries: 5
+
+  # Adminer - Web-based database administration tool
+  # Provides easy access to MySQL for development and debugging
+  adminer:
+    image: adminer:4.8.1
+    container_name: funbank-adminer
+    ports:
+      - "8083:8080"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      - mysql-db
+
+  # MongoDB Express - Web-based MongoDB administration tool
+  # Enables easy management of event store and document collections
+  mongo-express:
+    image: mongo-express:1.0.0
+    container_name: funbank-mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: funbank_mongo_admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: funbank_mongo_2024
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: funbank_admin_2024
+    ports:
+      - "8081:8081"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+
+  # Redis Commander - Web-based Redis administration tool
+  # Provides GUI for Redis cache management and monitoring
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: funbank-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:funbank_redis_2024
+      HTTP_USER: admin
+      HTTP_PASSWORD: funbank_admin_2024
+    ports:
+      - "8082:8081"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  # Spring Cloud Config Server - Centralized configuration management
+  funbank-config-server:
+    build:
+      context: ./funbank-config-server
+      dockerfile: Dockerfile
+    container_name: funbank-config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/config/actuator/health"]
+      timeout: 10s
+      retries: 5
+
+  # Eureka Service Registry - Service discovery and registration
+  funbank-service-registry:
+    build:
+      context: ./funbank-service-registry
+      dockerfile: Dockerfile
+    container_name: funbank-service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      funbank-config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      timeout: 10s
+      retries: 5
+
+  # API Gateway - Single entry point for all microservices
+  funbank-api-gateway:
+    build:
+      context: ./funbank-api-gateway
+      dockerfile: Dockerfile
+    container_name: funbank-api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      funbank-config-server:
+        condition: service_healthy
+      funbank-service-registry:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      timeout: 10s
+      retries: 5
+
+  # Elasticsearch - Search and analytics engine for centralized logging
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: funbank-elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=funbank-logging
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      timeout: 30s
+      retries: 10
+
+  # Logstash - Data processing pipeline for log ingestion
+  logstash:
+    image: logstash:8.11.0
+    container_name: funbank-logstash
+    volumes:
+      - ./docker/logstash/config:/usr/share/logstash/config
+      - ./docker/logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600 || exit 1"]
+      timeout: 10s
+      retries: 5
+
+  # Kibana - Data visualization and exploration for Elasticsearch
+  kibana:
+    image: kibana:8.11.0
+    container_name: funbank-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      timeout: 10s
+      retries: 10
+
+  # Prometheus - Metrics collection and monitoring
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: funbank-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
+      timeout: 10s
+      retries: 5
+
+  # Grafana - Data visualization and monitoring dashboards
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: funbank-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=funbank_admin_2024
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    networks:
+      - funbank-network
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      timeout: 10s
+      retries: 5
+
+# Persistent storage volumes for banking data
+# These volumes ensure data persistence across container restarts
+volumes:
+  mysql_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# Isolated network for Funbank microservices
+# Enables secure inter-service communication
+networks:
+  funbank-network:
+    driver: bridge
+    name: funbank-network

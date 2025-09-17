@@ -1,0 +1,219 @@
+# Stubby4j Configuration for Funbank External Service Mocking
+# Provides HTTP service stubbing capabilities as required by Suncorp testing standards
+
+# Regulatory Compliance API Stub
+- request:
+    method: POST
+    url: /api/v1/compliance/aml-check
+    headers:
+      content-type: application/json
+      authorization: "Bearer [a-zA-Z0-9\\-\\._~\\+\\/]+=*"
+    post: |
+      {
+        "customerId": "(.+)",
+        "transactionAmount": "([0-9]+\\.?[0-9]*)",
+        "transactionType": "(.+)"
+      }
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "checkId": "AML-{{request.post.customerId}}-{{math (now) 'randomPositive'}}",
+        "status": "CLEARED",
+        "riskScore": {{math 15 'randomPositive'}},
+        "flagged": false,
+        "checkDate": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z",
+        "regulatoryNotes": "Transaction cleared through automated AML screening"
+      }
+
+# High-Risk Transaction Stub
+- request:
+    method: POST
+    url: /api/v1/compliance/aml-check
+    post: |
+      {
+        "customerId": "(.+)",
+        "transactionAmount": "([1-9][0-9]{4,})",
+        "transactionType": "(.+)"
+      }
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "checkId": "AML-{{request.post.customerId}}-{{math (now) 'randomPositive'}}",
+        "status": "FLAGGED",
+        "riskScore": {{math 75 25 'randomPositive'}},
+        "flagged": true,
+        "checkDate": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z",
+        "regulatoryNotes": "Transaction flagged for manual review - high amount"
+      }
+
+# Credit Bureau API Stub
+- request:
+    method: GET
+    url: /api/v1/credit-bureau/score/<customerId>
+    headers:
+      authorization: "Bearer [a-zA-Z0-9\\-\\._~\\+\\/]+=*"
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "customerId": "<customerId>",
+        "creditScore": {{math 550 300 'randomPositive'}},
+        "scoreRange": "300-850",
+        "lastUpdated": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z",
+        "riskCategory": "MEDIUM",
+        "factors": [
+          "Payment history: Good",
+          "Credit utilization: Moderate",
+          "Length of credit history: Fair"
+        ]
+      }
+
+# Fraud Detection Service Stub
+- request:
+    method: POST
+    url: /api/v1/fraud/analyze
+    headers:
+      content-type: application/json
+    post: |
+      {
+        "transactionId": "(.+)",
+        "amount": "([0-9]+\\.?[0-9]*)",
+        "location": "(.+)",
+        "deviceFingerprint": "(.+)"
+      }
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "analysisId": "FRAUD-{{math (now) 'randomPositive'}}",
+        "transactionId": "{{request.post.transactionId}}",
+        "riskScore": {{math 25 'randomPositive'}},
+        "decision": "ALLOW",
+        "reasons": [
+          "Location matches customer profile",
+          "Device recognized",
+          "Transaction pattern normal"
+        ],
+        "analyzedAt": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z"
+      }
+
+# Suspicious Activity Fraud Detection
+- request:
+    method: POST
+    url: /api/v1/fraud/analyze
+    post: |
+      {
+        "transactionId": "(.+)",
+        "amount": "([5-9][0-9]{3,})",
+        "location": "(.+)",
+        "deviceFingerprint": "UNKNOWN_DEVICE"
+      }
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "analysisId": "FRAUD-{{math (now) 'randomPositive'}}",
+        "transactionId": "{{request.post.transactionId}}",
+        "riskScore": {{math 85 15 'randomPositive'}},
+        "decision": "BLOCK",
+        "reasons": [
+          "Unknown device detected",
+          "High transaction amount",
+          "Suspicious location pattern"
+        ],
+        "analyzedAt": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z"
+      }
+
+# SMS Notification Service Stub
+- request:
+    method: POST
+    url: /api/v1/notifications/sms
+    headers:
+      content-type: application/json
+    post: |
+      {
+        "phoneNumber": "(.+)",
+        "message": "(.+)",
+        "messageType": "(.+)"
+      }
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "messageId": "SMS-{{math (now) 'randomPositive'}}",
+        "status": "SENT",
+        "phoneNumber": "{{request.post.phoneNumber}}",
+        "sentAt": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z",
+        "provider": "TEST_PROVIDER"
+      }
+
+# Email Notification Service Stub  
+- request:
+    method: POST
+    url: /api/v1/notifications/email
+    headers:
+      content-type: application/json
+    post: |
+      {
+        "to": "(.+)",
+        "subject": "(.+)",
+        "template": "(.+)"
+      }
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "messageId": "EMAIL-{{math (now) 'randomPositive'}}",
+        "status": "SENT",
+        "to": "{{request.post.to}}",
+        "subject": "{{request.post.subject}}",
+        "sentAt": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z"
+      }
+
+# Currency Exchange Rate API Stub
+- request:
+    method: GET
+    url: /api/v1/rates/<fromCurrency>/<toCurrency>
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "fromCurrency": "<fromCurrency>",
+        "toCurrency": "<toCurrency>",
+        "rate": {{math 1.5 0.5 'randomFloat'}},
+        "timestamp": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z",
+        "provider": "TEST_EXCHANGE"
+      }
+
+# Service Health Check Endpoints
+- request:
+    method: GET
+    url: /health
+  response:
+    status: 200
+    headers:
+      content-type: application/json
+    body: |
+      {
+        "status": "UP",
+        "timestamp": "{{now 'yyyy-MM-dd'}}T{{now 'HH:mm:ss'}}Z",
+        "service": "stubby4j-mock-services"
+      }

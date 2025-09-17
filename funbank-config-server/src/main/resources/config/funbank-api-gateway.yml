@@ -1,0 +1,77 @@
+# Configuration for Funbank API Gateway
+server:
+  port: 8080
+
+spring:
+  application:
+    name: funbank-api-gateway
+  
+  cloud:
+    gateway:
+      routes:
+        # User Service Routes
+        - id: user-service
+          uri: lb://funbank-user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+
+        # Auth Service Routes
+        - id: auth-service
+          uri: lb://funbank-auth-service
+          predicates:
+            - Path=/api/auth/**,/oauth2/**,/login/**
+          filters:
+            - StripPrefix=1
+
+        # Config Server Routes
+        - id: config-server
+          uri: http://funbank-config-server:8888
+          predicates:
+            - Path=/config/**
+
+      # Global CORS Configuration
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: 
+              - "http://localhost:3000"
+              - "http://localhost:8080"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+  # Redis for rate limiting
+  data:
+    redis:
+      host: ${funbank.datasource.redis.host}
+      port: ${funbank.datasource.redis.port}
+      password: ${funbank.datasource.redis.password}
+
+# Gateway specific configuration
+funbank:
+  gateway:
+    security:
+      jwt:
+        secret: ${security.jwt.secret}
+      excluded-paths:
+        - "/api/auth/login"
+        - "/api/auth/register" 
+        - "/api/auth/refresh"
+        - "/oauth2/**"
+        - "/actuator/health"
+    rate-limiting:
+      default-requests-per-second: 10
+      default-burst-capacity: 20

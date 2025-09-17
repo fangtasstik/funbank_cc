@@ -1,0 +1,51 @@
+server:
+  port: 8888
+  servlet:
+    context-path: /config
+
+spring:
+  application:
+    name: funbank-config-server
+  
+  profiles:
+    active: native
+  
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config,file:./config-repo
+        health:
+          enabled: true
+
+security:
+  user:
+    name: funbank-config
+    password: funbank-config-2024
+  basic:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    refresh:
+      enabled: true
+
+info:
+  app:
+    name: Funbank Config Server
+    description: Centralized configuration management for Funbank banking system
+    version: 1.0.0
+
+logging:
+  level:
+    com.funbank: INFO
+    org.springframework.cloud: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

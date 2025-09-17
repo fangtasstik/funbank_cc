@@ -1,0 +1,69 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Funbank API Gateway
+  - job_name: 'funbank-api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['funbank-api-gateway:8080']
+    scrape_interval: 10s
+    metrics_path: '/actuator/prometheus'
+
+  # Funbank Config Server
+  - job_name: 'funbank-config-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['funbank-config-server:8888']
+    scrape_interval: 15s
+
+  # Funbank Service Registry (Eureka)
+  - job_name: 'funbank-service-registry'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['funbank-service-registry:8761']
+    scrape_interval: 15s
+
+  # Future microservices - uncomment when implemented
+  # - job_name: 'funbank-user-service'
+  #   metrics_path: '/actuator/prometheus'
+  #   static_configs:
+  #     - targets: ['funbank-user-service:8081']
+  #   scrape_interval: 10s
+
+  # - job_name: 'funbank-auth-service'
+  #   metrics_path: '/actuator/prometheus'
+  #   static_configs:
+  #     - targets: ['funbank-auth-service:8082']
+  #   scrape_interval: 10s
+
+  # Infrastructure monitoring
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+
+  # Elasticsearch metrics (if exposed)
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    scrape_interval: 30s
+    metrics_path: '/_prometheus/metrics'
+
+# Alerting configuration (can be extended later)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093

@@ -1,0 +1,66 @@
+# Development environment configuration  
+spring:
+  # Enable config server for dev (but make it optional)
+  cloud:
+    config:
+      enabled: true
+      fail-fast: false  # Don't fail if config server is unavailable
+      retry:
+        max-attempts: 1  # Only try once in dev
+        initial-interval: 1000
+      username: ${CONFIG_SERVER_USERNAME:funbank-config}  # Config server authentication
+      password: ${CONFIG_SERVER_PASSWORD:funbank-config-2024}
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:3000"
+            allowedMethods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+# Enable Eureka for dev (with localhost URLs)
+eureka:
+  client:
+    enabled: true
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    healthcheck:
+      enabled: true
+    lease:
+      duration: 5  # Faster lease renewal for dev
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5  # Faster heartbeat in dev
+    lease-expiration-duration-in-seconds: 10
+
+# Development-specific JWT configuration  
+funbank:
+  jwt:
+    secret: ${JWT_SECRET:b21b358ae6ef47d0e451582ebb56f122ce001bf6a3e44a11c9af3b9a8b06bee4}
+    expiration-ms: ${JWT_EXPIRATION_MS:3600000}  # 1 hour (shorter for dev)
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:86400000}  # 1 day (shorter for dev)
+
+# OpenTelemetry Configuration for Development
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0  # 100% sampling for development
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+    metrics:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/metrics}
+      
+# Development logging - more verbose for debugging
+logging:
+  level:
+    com.funbank: DEBUG
+    com.funbank.gateway.filter: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    io.opentelemetry: DEBUG  # Enable OTel debug logging

@@ -1,0 +1,170 @@
+{
+  "mappings": [
+    {
+      "id": "get-account-balance",
+      "name": "Mock External Bank Account Balance API",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/api/v1/accounts/([0-9]+)/balance",
+        "headers": {
+          "Authorization": {
+            "matches": "Bearer .*"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-API-Version": "1.0"
+        },
+        "jsonBody": {
+          "accountNumber": "{{request.pathSegments.[3]}}",
+          "balance": 1500.50,
+          "currency": "AUD",
+          "lastUpdated": "{{now format='yyyy-MM-dd'}}T10:30:00Z",
+          "accountType": "SAVINGS",
+          "status": "ACTIVE"
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "id": "transfer-funds-success",
+      "name": "Mock External Bank Transfer Success",
+      "request": {
+        "method": "POST",
+        "urlPath": "/api/v1/transfers",
+        "headers": {
+          "Authorization": {
+            "matches": "Bearer .*"
+          },
+          "Content-Type": {
+            "equalTo": "application/json"
+          }
+        },
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": "$.fromAccount"
+          },
+          {
+            "matchesJsonPath": "$.toAccount"
+          },
+          {
+            "matchesJsonPath": "$.amount"
+          }
+        ]
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json",
+          "Location": "/api/v1/transfers/{{randomValue type='UUID'}}"
+        },
+        "jsonBody": {
+          "transferId": "{{randomValue type='UUID'}}",
+          "fromAccount": "{{jsonPath request.body '$.fromAccount'}}",
+          "toAccount": "{{jsonPath request.body '$.toAccount'}}",
+          "amount": "{{jsonPath request.body '$.amount'}}",
+          "currency": "AUD",
+          "status": "COMPLETED",
+          "timestamp": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z",
+          "reference": "EXT-TXN-{{randomValue type='ALPHANUMERIC' length=8}}"
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "id": "transfer-insufficient-funds",
+      "name": "Mock External Bank Insufficient Funds Error",
+      "request": {
+        "method": "POST",
+        "urlPath": "/api/v1/transfers",
+        "bodyPatterns": [
+          {
+            "matchesJsonPath": "$.amount",
+            "jsonPath": {
+              "expression": "$.amount",
+              "greaterThan": 10000
+            }
+          }
+        ]
+      },
+      "response": {
+        "status": 422,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "error": {
+            "code": "INSUFFICIENT_FUNDS",
+            "message": "Account does not have sufficient funds for this transfer",
+            "details": {
+              "requestedAmount": "{{jsonPath request.body '$.amount'}}",
+              "availableBalance": 500.00,
+              "currency": "AUD"
+            }
+          }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "id": "kyc-verification-success",
+      "name": "Mock KYC Verification Service Success",
+      "request": {
+        "method": "POST",
+        "urlPath": "/api/v1/kyc/verify",
+        "headers": {
+          "Authorization": {
+            "matches": "Bearer .*"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "verificationId": "{{randomValue type='UUID'}}",
+          "status": "VERIFIED",
+          "confidence": 95.5,
+          "verifiedAt": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z",
+          "documentType": "{{jsonPath request.body '$.documentType'}}",
+          "documentNumber": "{{jsonPath request.body '$.documentNumber'}}",
+          "checks": {
+            "identityVerification": true,
+            "addressVerification": true,
+            "sanctionsCheck": true
+          }
+        },
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "id": "payment-processor-success",
+      "name": "Mock Payment Processor Success Response",
+      "request": {
+        "method": "POST",
+        "urlPath": "/api/v1/payments/process"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "paymentId": "{{randomValue type='UUID'}}",
+          "status": "PROCESSED",
+          "amount": "{{jsonPath request.body '$.amount'}}",
+          "currency": "{{jsonPath request.body '$.currency'}}",
+          "merchantReference": "{{jsonPath request.body '$.reference'}}",
+          "processorReference": "PP-{{randomValue type='ALPHANUMERIC' length=10}}",
+          "processedAt": "{{now format='yyyy-MM-dd'}}T{{now format='HH:mm:ss'}}Z"
+        },
+        "transformers": ["response-template"]
+      }
+    }
+  ]
+}
