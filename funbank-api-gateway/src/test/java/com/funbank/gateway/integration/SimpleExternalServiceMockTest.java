@@ -1,15 +1,11 @@
 package com.funbank.gateway.integration;
 
-import com.funbank.gateway.FunbankApiGatewayApplication;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -21,19 +17,11 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Integration test demonstrating WireMock for external service mocking
- * following Suncorp testing patterns
+ * Simple WireMock test without Spring Boot context
+ * Demonstrates Suncorp-aligned testing patterns
  */
-@SpringBootTest(classes = FunbankApiGatewayApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@TestPropertySource(properties = {
-    "eureka.client.enabled=false",
-    "spring.cloud.config.enabled=false",
-    "JWT_SECRET=dGVzdEp3dFNlY3JldEtleUZvclRlc3RpbmdNaW5pbXVtMzJDaGFyYWN0ZXJzTG9uZw==",
-    "logging.config="
-})
-@DisplayName("External Service Mock Tests")
-class ExternalServiceMockTest {
+@DisplayName("Simple External Service Mock Tests")
+class SimpleExternalServiceMockTest {
 
     private WireMockServer wireMockServer;
 
@@ -87,7 +75,7 @@ class ExternalServiceMockTest {
 
     @Test
     @DisplayName("Should handle external service errors")
-    void shouldHandleExternalServiceErrors() {
+    void shouldHandleExternalServiceErrors() throws Exception {
         // Given - Mock external service to return error
         stubFor(get(urlEqualTo("/users/999"))
             .willReturn(aResponse()
@@ -100,7 +88,19 @@ class ExternalServiceMockTest {
                     }
                     """)));
 
-        // When/Then - This demonstrates error scenario mocking
-        assertThat(wireMockServer.isRunning()).isTrue();
+        // When - Make request to get error response
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("http://localhost:8089/users/999"))
+            .build();
+        
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // Then - Verify error response
+        assertThat(response.statusCode()).isEqualTo(404);
+        assertThat(response.body()).contains("User not found");
+        assertThat(response.body()).contains("USER_NOT_FOUND");
+        
+        verify(getRequestedFor(urlEqualTo("/users/999")));
     }
 }
