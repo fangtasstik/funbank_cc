@@ -23,10 +23,53 @@
         </rollingPolicy>
     </appender>
 
-    <!-- Logstash TCP Appender for ELK Stack (disabled for test profile) -->
-    <springProfile name="!test">
+    <!-- Root logger configuration -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+    <!-- Banking-specific loggers with enhanced logging -->
+    <logger name="com.funbank" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Security-related logging -->
+    <logger name="org.springframework.security" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Gateway-specific logging -->
+    <logger name="org.springframework.cloud.gateway" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- OpenTelemetry logging -->
+    <logger name="io.opentelemetry" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Reduce noise from Spring internals in production -->
+    <springProfile name="prod">
+        <logger name="org.springframework" level="WARN"/>
+        <logger name="org.apache" level="WARN"/>
+        <logger name="com.netflix" level="WARN"/>
+    </springProfile>
+
+    <!-- Enhanced logging for development -->
+    <springProfile name="dev,local">
+        <logger name="org.springframework.web" level="DEBUG"/>
+        <logger name="org.springframework.cloud.loadbalancer" level="DEBUG"/>
+    </springProfile>
+
+    <!-- Logstash TCP Appender for ELK Stack (only when docker profile is active) -->
+    <springProfile name="docker">
         <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-            <destination>${LOGSTASH_HOST:localhost}:${LOGSTASH_PORT:5000}</destination>
+            <destination>localhost:5000</destination>
             <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
                 <providers>
                     <timestamp/>
@@ -55,71 +98,27 @@
             <writeBufferSize>16384</writeBufferSize>
             <includeCallerData>true</includeCallerData>
         </appender>
-    </springProfile>
 
-    <!-- Async wrapper for Logstash to prevent blocking -->
-    <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="LOGSTASH"/>
-        <queueSize>512</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <includeCallerData>true</includeCallerData>
-    </appender>
+        <!-- Async wrapper for Logstash to prevent blocking -->
+        <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="LOGSTASH"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <includeCallerData>true</includeCallerData>
+        </appender>
 
-    <!-- Root logger configuration -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <springProfile name="!test">
+        <!-- Add Logstash to root logger only for docker profile -->
+        <root level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
             <appender-ref ref="ASYNC_LOGSTASH"/>
-        </springProfile>
-    </root>
+        </root>
 
-    <!-- Banking-specific loggers with enhanced logging -->
-    <logger name="com.funbank" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <springProfile name="!test">
+        <!-- Add Logstash to specific loggers only for docker profile -->
+        <logger name="com.funbank" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
             <appender-ref ref="ASYNC_LOGSTASH"/>
-        </springProfile>
-    </logger>
-
-    <!-- Security-related logging -->
-    <logger name="org.springframework.security" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <springProfile name="!test">
-            <appender-ref ref="ASYNC_LOGSTASH"/>
-        </springProfile>
-    </logger>
-
-    <!-- Gateway-specific logging -->
-    <logger name="org.springframework.cloud.gateway" level="DEBUG" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <springProfile name="!test">
-            <appender-ref ref="ASYNC_LOGSTASH"/>
-        </springProfile>
-    </logger>
-
-    <!-- OpenTelemetry logging -->
-    <logger name="io.opentelemetry" level="INFO" additivity="false">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <springProfile name="!test">
-            <appender-ref ref="ASYNC_LOGSTASH"/>
-        </springProfile>
-    </logger>
-
-    <!-- Reduce noise from Spring internals in production -->
-    <springProfile name="prod">
-        <logger name="org.springframework" level="WARN"/>
-        <logger name="org.apache" level="WARN"/>
-        <logger name="com.netflix" level="WARN"/>
-    </springProfile>
-
-    <!-- Enhanced logging for development -->
-    <springProfile name="dev,local">
-        <logger name="org.springframework.web" level="DEBUG"/>
-        <logger name="org.springframework.cloud.loadbalancer" level="DEBUG"/>
+        </logger>
     </springProfile>
 </configuration>
