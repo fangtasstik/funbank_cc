@@ -5,7 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration.class,
+    org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration.class
+})
 @EnableDiscoveryClient
 @EnableJpaAuditing
 public class FunbankUserServiceApplication {
