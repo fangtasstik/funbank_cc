@@ -10,9 +10,14 @@ This directory contains all the shell scripts for building, testing, and managin
 
 ### 🔍 Testing Scripts
 - **`comprehensive-test.sh`** - Runs comprehensive tests across all services
-- **`test-services.sh`** - Basic service health testing
+- **`test-services.sh`** - Basic service health testing and API endpoint validation
 - **`test-suncorp-stack.sh`** - Tests Suncorp-aligned testing stack
 - **`test-otel.sh`** - Tests OpenTelemetry tracing configuration
+
+### 🚀 Service Management
+- **`start-all-services.sh`** - Starts all core services in correct dependency order
+- **`stop-all-services.sh`** - Stops all running services gracefully
+- **`verify-all-services.sh`** - Verifies all services are running and healthy
 
 ### 📊 Observability & Monitoring
 - **`verify-observability-stack.sh`** - Verifies all observability services are healthy

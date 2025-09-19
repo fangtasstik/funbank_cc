@@ -1,6 +1,7 @@
-docs/
+# Claude specific
 rules/
 .claude/
+docs/
 
 # Build outputs
 target/
