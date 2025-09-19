@@ -47,6 +47,8 @@ class GatewayIntegrationTest {
         registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
         registry.add("eureka.client.enabled", () -> "false");
         registry.add("spring.cloud.config.enabled", () -> "false");
+        registry.add("JWT_SECRET", () -> "dGVzdEp3dFNlY3JldEtleUZvclRlc3RpbmdNaW5pbXVtMzJDaGFyYWN0ZXJzTG9uZw==");
+        registry.add("logging.config", () -> "");
     }
 
     @BeforeEach

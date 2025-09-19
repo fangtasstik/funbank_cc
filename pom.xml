@@ -58,6 +58,8 @@
         <module>funbank-config-server</module>
         <module>funbank-service-registry</module>
         <module>funbank-api-gateway</module>
+        <module>funbank-user-service</module>
+        <module>funbank-auth-service</module>
     </modules>
 
     <!-- Dependency Management -->
