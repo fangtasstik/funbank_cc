@@ -5,6 +5,9 @@ import com.funbank.gateway.filter.JwtAuthenticationFilter;
 import com.funbank.gateway.filter.AuditLogFilter;
 import com.funbank.gateway.filter.SecurityHeadersFilter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
+import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
+import org.springframework.cloud.gateway.filter.ratelimit.RateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -48,8 +51,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeExchange(exchanges -> exchanges
                 .pathMatchers(
-                    "/api/auth/**", 
-                    "/oauth2/**", 
+                    "/api/auth/**",
+                    "/oauth2/**",
                     "/actuator/health",
                     "/actuator/info",
                     "/config/**"
@@ -66,7 +69,7 @@ public class SecurityConfig {
      * Route locator with integrated security filters
      */
     @Bean
-    public RouteLocator gatewayRoutes(RouteLocatorBuilder builder, 
+    public RouteLocator gatewayRoutes(RouteLocatorBuilder builder,
                                     JwtAuthenticationFilter jwtFilter,
                                     AuditLogFilter auditFilter,
                                     SecurityHeadersFilter securityFilter) {
@@ -85,7 +88,7 @@ public class SecurityConfig {
                 )
                 .uri("lb://funbank-user-service")
             )
-            
+
             // Account Service Routes
             .route("account-service", r -> r.path("/api/accounts/**")
                 .filters(f -> f
@@ -100,7 +103,7 @@ public class SecurityConfig {
                 )
                 .uri("lb://funbank-account-service")
             )
-            
+
             // Transaction Service Routes with stricter rate limiting
             .route("transaction-service", r -> r.path("/api/transactions/**")
                 .filters(f -> f
@@ -115,7 +118,7 @@ public class SecurityConfig {
                 )
                 .uri("lb://funbank-transaction-service")
             )
-            
+
             // Auth Service Routes (no JWT filter for login/register)
             .route("auth-service", r -> r.path("/api/auth/**", "/oauth2/**")
                 .filters(f -> f
@@ -129,7 +132,7 @@ public class SecurityConfig {
                 )
                 .uri("lb://funbank-auth-service")
             )
-            
+
             // Config Server Routes (admin only)
             .route("config-server", r -> r.path("/config/**")
                 .filters(f -> f
@@ -149,7 +152,7 @@ public class SecurityConfig {
         JwtAuthenticationFilter.Config config = new JwtAuthenticationFilter.Config();
         config.setExcludedPaths(List.of(
             "/api/auth/login",
-            "/api/auth/register", 
+            "/api/auth/register",
             "/api/auth/refresh",
             "/oauth2/",
             "/actuator/health"
@@ -167,14 +170,14 @@ public class SecurityConfig {
     }
 
     // These beans would be injected from RateLimitingConfig
-    private org.springframework.cloud.gateway.filter.ratelimit.KeyResolver userKeyResolver() {
+    private KeyResolver userKeyResolver() {
         return exchange -> {
             String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
             return reactor.core.publisher.Mono.just(userId != null ? "user:" + userId : "anonymous");
         };
     }
 
-    private org.springframework.cloud.gateway.filter.ratelimit.KeyResolver pathKeyResolver() {
+    private KeyResolver pathKeyResolver() {
         return exchange -> {
             String path = exchange.getRequest().getPath().value();
             String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
@@ -182,7 +185,7 @@ public class SecurityConfig {
         };
     }
 
-    private org.springframework.cloud.gateway.filter.ratelimit.KeyResolver ipKeyResolver() {
+    private KeyResolver ipKeyResolver() {
         return exchange -> {
             String clientIp = exchange.getRequest().getRemoteAddress() != null ?
                 exchange.getRequest().getRemoteAddress().getAddress().getHostAddress() : "unknown";
@@ -191,15 +194,15 @@ public class SecurityConfig {
     }
 
     // Rate limiter configurations
-    private org.springframework.cloud.gateway.filter.ratelimit.RateLimiter redisRateLimiter() {
-        return new org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter(10, 20, 1);
+    private RateLimiter redisRateLimiter() {
+        return new RedisRateLimiter(10, 20, 1);
     }
 
-    private org.springframework.cloud.gateway.filter.ratelimit.RateLimiter strictRedisRateLimiter() {
-        return new org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter(5, 10, 1);
+    private RateLimiter strictRedisRateLimiter() {
+        return new RedisRateLimiter(5, 10, 1);
     }
 
-    private org.springframework.cloud.gateway.filter.ratelimit.RateLimiter authRateLimiter() {
-        return new org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter(3, 5, 1);
+    private RateLimiter authRateLimiter() {
+        return new RedisRateLimiter(3, 5, 1);
     }
 }
