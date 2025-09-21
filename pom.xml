@@ -102,6 +102,18 @@
                 <artifactId>mongodb-driver-sync</artifactId>
                 <version>${mongodb.version}</version>
             </dependency>
+            
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongodb-driver-core</artifactId>
+                <version>${mongodb.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>bson</artifactId>
+                <version>${mongodb.version}</version>
+            </dependency>
 
             <!-- JWT Dependencies -->
             <dependency>

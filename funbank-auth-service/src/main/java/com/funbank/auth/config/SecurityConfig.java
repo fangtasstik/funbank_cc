@@ -55,6 +55,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/actuator/info").permitAll()
                 
+                // Database test endpoints (for development)
+                .requestMatchers("/api/test/**").permitAll()
+                
                 // Admin endpoints (for monitoring)
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                 

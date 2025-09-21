@@ -25,12 +25,16 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
 
-  # Redis configuration for session management
+  # MongoDB configuration
   data:
+    mongodb:
+      uri: mongodb://${MONGO_HOST:localhost}:${MONGO_PORT:27017}/funbank_auth
+      
+    # Redis configuration for session management  
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6380}
-      password: ${REDIS_PASSWORD:password}
+      password: ${REDIS_PASSWORD:funbank_redis_2024}
       timeout: 2000ms
 
 eureka:
