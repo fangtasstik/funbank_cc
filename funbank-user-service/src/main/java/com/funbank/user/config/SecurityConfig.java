@@ -24,10 +24,10 @@ public class SecurityConfig {
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // 允许创建用户和获取用户列表（用于测试）
+                // Allow user creation and user listing (for testing)
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
-                // 其他所有请求需要认证
+                // All other requests require authentication
                 .anyRequest().authenticated()
             );
             
